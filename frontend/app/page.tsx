@@ -41,7 +41,7 @@ export default function Home() {
 
     const walletClient = createWalletClient({
       chain: sepolia,
-      // @ts-ignore
+      // @ts-expect-error
       transport: custom(window.ethereum!),
     });
 
