@@ -4,6 +4,13 @@ import { useState } from 'react';
 import { createPublicClient, http, createWalletClient, custom } from 'viem';
 import { sepolia } from 'viem/chains';
 import { Button } from '@/components/ui/button';
+import { MetaMaskInpageProvider } from '@metamask/providers';
+
+declare global {
+  interface Window {
+    ethereum?: MetaMaskInpageProvider;
+  }
+}
 
 const CONTRACT_ADDRESS = '0xd5E4802Cc79C7067501124fA33cDD2f1cd2f22aC';
 const ABI = [
@@ -41,7 +48,6 @@ export default function Home() {
 
     const walletClient = createWalletClient({
       chain: sepolia,
-      // @ts-expect-error
       transport: custom(window.ethereum!),
     });
 
@@ -57,9 +63,9 @@ export default function Home() {
       })) as [number, number, number];
       setResult(data);
       setError(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.message || 'Proof verification failed');
+      setError((err as Error).message || 'Proof verification failed');
       setResult(null);
     }
   };
