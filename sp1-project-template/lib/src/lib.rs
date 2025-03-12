@@ -1,11 +1,21 @@
 use alloy_sol_types::sol;
 
+// sol! {
+//     /// The public values encoded as a struct that can be easily deserialized inside Solidity.
+//     struct PublicValuesStruct {
+//         uint32 n;
+//         uint32 a;
+//         uint32 b;
+//     }
+// }
+
 sol! {
-    /// The public values encoded as a struct that can be easily deserialized inside Solidity.
     struct PublicValuesStruct {
-        uint32 n;
-        uint32 a;
-        uint32 b;
+        uint64 agentId;
+        uint64 wbtc;
+        uint64 eth;
+        uint64 doge;
+        uint64 isValid;
     }
 }
 

@@ -51,11 +51,37 @@ PRIVATE_KEY=...
 Then deploy the contract to the chain:
 
 ```sh
-source .env && forge script script/FibonacciScript.s.sol:FibonacciScript --chain sepolia --rpc-url "$RPC_URL" --sender $ADDRESS --private-key "$PRIVATE_KEY" --broadcast --verify -vvvv
+source .env && forge script script/BucketVerifierScript.s.sol:BucketVerifierScript \
+--chain sepolia \
+--rpc-url "$RPC_URL" \
+--sender "$ADDRESS" \
+--private-key "$PRIVATE_KEY" \
+--broadcast \
+--verify \
+-vvvv
 ```
 
 It can also be a good idea to verify the contract when you deploy, in which case you would also need to set `ETHERSCAN_API_KEY`:
 
 ```sh
-source .env && forge create src/Fibonacci.sol:Fibonacci --rpc-url $RPC_URL --private-key $PRIVATE_KEY --constructor-args $VERIFIER $PROGRAM_VKEY --verify --verifier etherscan --etherscan-api-key $ETHERSCAN_API_KEY
+forge verify-contract \
+  --chain-id 11155111 \
+  --compiler-version "v0.8.28" \
+  --constructor-args $(cast abi-encode "constructor(address)" "$VERIFIER") \
+  --watch \
+  0x3964Da75b170702dde4266d2b1A2a5048D94998B \
+  src/Verifier.sol:Verifier
+```
+
+Token Deploy
+
+```sh
+source .env && forge script script/CustomTokenScript.s.sol:CustomTokenScript \
+    --chain sepolia \
+    --rpc-url "$RPC_URL" \
+    --sender "$ADDRESS" \
+    --private-key "$PRIVATE_KEY" \
+    --broadcast \
+    --verify \
+    -vvvv
 ```
