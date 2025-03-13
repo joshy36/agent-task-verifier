@@ -36,5 +36,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  return NextResponse.json({ data: latestProofData });
+  const responseData = latestProofData;
+  latestProofData = null;
+  return NextResponse.json({ data: responseData });
 }
