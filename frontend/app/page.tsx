@@ -18,6 +18,7 @@ export default function Home() {
     publicValues: '',
     proof: '',
   });
+  const [isGenerating, setIsGenerating] = useState(false); // New state to track generation
 
   useEffect(() => {
     const fetchProof = async () => {
@@ -32,6 +33,7 @@ export default function Home() {
             publicValues: data.public_values,
             proof: data.proof,
           });
+          setIsGenerating(false); // Re-enable the button when proof is received
         }
       } catch (error) {
         console.error('Polling error:', error);
@@ -54,7 +56,12 @@ export default function Home() {
           <TokenAllocation onWalletAddressChange={setWalletAddress} />
         </div>
         <div className="flex-1">
-          <GenerateProof walletAddress={walletAddress} proofData={proofData} />
+          <GenerateProof
+            walletAddress={walletAddress}
+            proofData={proofData}
+            isGenerating={isGenerating}
+            setIsGenerating={setIsGenerating}
+          />
         </div>
         <div className="flex-1">
           <VerifyProof

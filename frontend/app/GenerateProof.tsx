@@ -13,6 +13,8 @@ type ProofData = {
 interface GenerateProofProps {
   walletAddress?: string;
   proofData: ProofData;
+  isGenerating: boolean; // New prop to track generation status
+  setIsGenerating: (value: boolean) => void; // New prop to update generation status
 }
 
 const KNOWN_VALID_ADDRESS = '0xe789a4B06Bc4b78F0Db311B74F537cEcBf64c302';
@@ -20,6 +22,8 @@ const KNOWN_VALID_ADDRESS = '0xe789a4B06Bc4b78F0Db311B74F537cEcBf64c302';
 const GenerateProof = ({
   walletAddress: initialWalletAddress = '',
   proofData,
+  isGenerating,
+  setIsGenerating,
 }: GenerateProofProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +37,7 @@ const GenerateProof = ({
 
     setIsLoading(true);
     setError(null);
+    setIsGenerating(true); // Disable the button by setting isGenerating to true
 
     try {
       const response = await fetch('/api/generate-proof', {
@@ -46,12 +51,11 @@ const GenerateProof = ({
           `Failed to start proof generation: ${response.statusText}`
         );
       }
-
-      // No need to await the result here; polling in Home will handle it
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to start proof generation'
       );
+      setIsGenerating(false); // Re-enable on error
     } finally {
       setIsLoading(false);
     }
@@ -75,12 +79,12 @@ const GenerateProof = ({
           onChange={(e) => setAddress(e.target.value)}
           placeholder="Enter wallet address (e.g., 0x...)"
           className="bg-gray-800 text-gray-300 border-gray-700 focus:border-gray-600"
-          disabled={isLoading}
+          disabled={isLoading || isGenerating}
         />
         <Button
           onClick={handleSelectKnownAddress}
           className="bg-gray-700 hover:bg-gray-600 text-white text-sm"
-          disabled={isLoading}
+          disabled={isLoading || isGenerating}
         >
           Use Known Valid Address ({KNOWN_VALID_ADDRESS.slice(0, 6)}...
           {KNOWN_VALID_ADDRESS.slice(-4)})
@@ -90,7 +94,7 @@ const GenerateProof = ({
       <Button
         onClick={startProofGeneration}
         className="w-full bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center"
-        disabled={isLoading || !address}
+        disabled={isLoading || !address || isGenerating} // Disable when generating
       >
         {isLoading ? (
           <>
@@ -122,8 +126,8 @@ const GenerateProof = ({
       </Button>
 
       <div className="mt-2 text-xs text-gray-400">
-        Proof generation takes around 3 minutes. Don&apos;t spam the button. The
-        ui will update when the new proof is done.
+        Proof generation takes around 3 minutes. Try not to run multiple proofs
+        at once.
       </div>
 
       {(proofData.vkey || proofData.publicValues || proofData.proof) && (
@@ -131,20 +135,20 @@ const GenerateProof = ({
           <p className="text-gray-400 font-semibold">
             Most recently generated proof
           </p>
-          <p className=" flex justify-between">
+          <p className="flex justify-between">
             <span className="font-medium">Verification Key:</span>{' '}
             <span className="break-all text-xs">
               {proofData.vkey.slice(0, 10)}...{proofData.vkey.slice(-8)}
             </span>
           </p>
-          <p className=" flex justify-between">
+          <p className="flex justify-between">
             <span className="font-medium">Public Values:</span>{' '}
             <span className="break-all text-xs">
               {proofData.publicValues.slice(0, 10)}...
               {proofData.publicValues.slice(-8)}
             </span>
           </p>
-          <p className=" flex justify-between">
+          <p className="flex justify-between">
             <span className="font-medium">Proof Bytes:</span>{' '}
             <span className="break-all text-xs">
               {proofData.proof.slice(0, 10)}...{proofData.proof.slice(-8)}
