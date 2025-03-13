@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAddress } from 'viem';
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,6 +8,17 @@ export async function POST(req: NextRequest) {
     if (!agent) {
       return NextResponse.json(
         { error: 'Please provide a wallet address' },
+        { status: 400 }
+      );
+    }
+
+    let checksummedAgent: string;
+    try {
+      checksummedAgent = getAddress(agent);
+    } catch (error) {
+      console.error('Invalid Ethereum address:', error);
+      return NextResponse.json(
+        { error: 'Invalid Ethereum wallet address provided' },
         { status: 400 }
       );
     }
