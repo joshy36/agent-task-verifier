@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        checksummedAgent,
+        agent: checksummedAgent,
         system: system || 'groth16',
       }),
     });
