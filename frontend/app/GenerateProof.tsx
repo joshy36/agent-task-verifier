@@ -13,8 +13,8 @@ type ProofData = {
 interface GenerateProofProps {
   walletAddress?: string;
   proofData: ProofData;
-  isGenerating: boolean; // New prop to track generation status
-  setIsGenerating: (value: boolean) => void; // New prop to update generation status
+  isGenerating: boolean; // Tracks generation status
+  setIsGenerating: (value: boolean) => void; // Updates generation status
 }
 
 const KNOWN_VALID_ADDRESS = '0xe789a4B06Bc4b78F0Db311B74F537cEcBf64c302';
@@ -25,7 +25,6 @@ const GenerateProof = ({
   isGenerating,
   setIsGenerating,
 }: GenerateProofProps) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [address, setAddress] = useState(initialWalletAddress);
 
@@ -35,9 +34,8 @@ const GenerateProof = ({
       return;
     }
 
-    setIsLoading(true);
     setError(null);
-    setIsGenerating(true); // Disable the button by setting isGenerating to true
+    setIsGenerating(true); // Optimistically set to generating state
 
     try {
       const response = await fetch('/api/generate-proof', {
@@ -56,9 +54,8 @@ const GenerateProof = ({
         err instanceof Error ? err.message : 'Failed to start proof generation'
       );
       setIsGenerating(false); // Re-enable on error
-    } finally {
-      setIsLoading(false);
     }
+    // No finally block needed since we don't rely on isLoading
   };
 
   const handleSelectKnownAddress = () => {
@@ -79,12 +76,12 @@ const GenerateProof = ({
           onChange={(e) => setAddress(e.target.value)}
           placeholder="Enter wallet address (e.g., 0x...)"
           className="bg-gray-800 text-gray-300 border-gray-700 focus:border-gray-600"
-          disabled={isLoading || isGenerating}
+          disabled={isGenerating} // Disable input during generation
         />
         <Button
           onClick={handleSelectKnownAddress}
           className="bg-gray-700 hover:bg-gray-600 text-white text-sm"
-          disabled={isLoading || isGenerating}
+          disabled={isGenerating} // Disable button during generation
         >
           Use Known Valid Address ({KNOWN_VALID_ADDRESS.slice(0, 6)}...
           {KNOWN_VALID_ADDRESS.slice(-4)})
@@ -94,9 +91,9 @@ const GenerateProof = ({
       <Button
         onClick={startProofGeneration}
         className="w-full bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center"
-        disabled={isLoading || !address || isGenerating} // Disable when generating
+        disabled={!address || isGenerating} // Disable if no address or generating
       >
-        {isLoading ? (
+        {isGenerating ? (
           <>
             <svg
               className="animate-spin h-5 w-5 mr-2 text-gray-400"
@@ -118,7 +115,7 @@ const GenerateProof = ({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
               />
             </svg>
-            <span>Starting...</span>
+            <span>Generating...</span>
           </>
         ) : (
           'Generate Proof'

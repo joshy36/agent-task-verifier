@@ -173,21 +173,21 @@ const VerifyProof = ({ vkey, publicValues, proof }: VerifyProofProps) => {
               </a>
             </p>
           </div>
-          <div>
+          <div className="flex justify-between">
             <p className="font-medium">Verification Key:</p>
             <p className="break-all text-xs">
               {EXISTING_PROOF.vkey.slice(0, 10)}...
               {EXISTING_PROOF.vkey.slice(-8)}
             </p>
           </div>
-          <div>
+          <div className="flex justify-between">
             <p className="font-medium">Public Values:</p>
             <p className="break-all text-xs">
               {EXISTING_PROOF.publicValues.slice(0, 10)}...
               {EXISTING_PROOF.publicValues.slice(-8)}
             </p>
           </div>
-          <div>
+          <div className="flex justify-between">
             <p className="font-medium">Proof Bytes:</p>
             <p className="break-all text-xs">
               {EXISTING_PROOF.proof.slice(0, 10)}...
