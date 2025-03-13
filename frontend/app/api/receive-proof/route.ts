@@ -1,7 +1,18 @@
 import { NextResponse } from 'next/server';
 
-// In-memory store for the latest proof data (for simplicity; use a DB in production)
-let latestProofData: any = null;
+interface ProofData {
+  agent: string; // Ethereum address
+  wbtc_bal: string; // 32-byte hex value
+  eth_bal: string; // 32-byte hex value
+  doge_bal: string; // 32-byte hex value
+  is_valid: boolean; // Validity flag
+  vkey: string; // 32-byte hex value
+  public_values: string[]; // Array of hex values
+  proof: string; // Hex value (possibly empty)
+}
+
+// In-memory store for the latest proof data
+let latestProofData: ProofData | null = null;
 
 export async function POST(request: Request) {
   try {
