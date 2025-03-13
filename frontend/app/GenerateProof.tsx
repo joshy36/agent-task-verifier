@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input'; // Assuming you have an Input component from your UI library
+import { Input } from '@/components/ui/input';
 
 type ProofData = {
   vkey: string;
@@ -11,12 +11,12 @@ type ProofData = {
 };
 
 interface GenerateProofProps {
-  walletAddress?: string; // Optional prop from parent, can be used as initial value
+  walletAddress?: string;
   proofData: ProofData;
   onProofGenerated: (data: ProofData) => void;
 }
 
-const KNOWN_VALID_ADDRESS = '0xfa9Cc30e4d458D6A327c8407414CcAfc61D0884c';
+const KNOWN_VALID_ADDRESS = '0xe789a4B06Bc4b78F0Db311B74F537cEcBf64c302';
 
 const GenerateProof = ({
   walletAddress: initialWalletAddress = '',
@@ -25,7 +25,7 @@ const GenerateProof = ({
 }: GenerateProofProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [address, setAddress] = useState(initialWalletAddress); // Local state for address input
+  const [address, setAddress] = useState(initialWalletAddress);
 
   const generateProof = async () => {
     if (!address) {
@@ -37,30 +37,37 @@ const GenerateProof = ({
     setError(null);
 
     try {
-      const response = await fetch('http://127.0.0.1:3001/generate_proof', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          agent: address, // Use local address state
-          system: 'core',
-        }),
-      });
+      const response = await fetch(
+        'http://77.104.167.149:55562/generate_proof',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agent: address,
+            system: 'groth16',
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to generate proof');
+        throw new Error(
+          `Server responded with ${response.status}: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
       const newProofData: ProofData = {
         vkey: data.vkey,
-        publicValues: data.public_values.join(','),
+        publicValues: data.public_values,
         proof: data.proof,
       };
       onProofGenerated(newProofData);
-    } catch (err) {
-      setError((err as Error).message || 'Failed to generate proof');
+    } catch {
+      setError(
+        'If the wallet has a zero balance of any of the tokens this will error. I need to fix that cause you would still want to generate a proof that shows invalid'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +75,7 @@ const GenerateProof = ({
 
   const handleSelectKnownAddress = () => {
     setAddress(KNOWN_VALID_ADDRESS);
-    setError(null); // Clear any existing error
+    setError(null);
   };
 
   return (
@@ -130,10 +137,18 @@ const GenerateProof = ({
         )}
       </Button>
 
-      {/* Display proofData if it exists */}
+      {/* Show wait message when generating */}
+      {isLoading && (
+        <div className="mt-2 text-sm text-gray-400 text-center">
+          This takes about 3 minutes
+        </div>
+      )}
+
       {(proofData.vkey || proofData.publicValues || proofData.proof) && (
         <div className="mt-4 text-sm text-gray-400">
-          <p className="text-green-400">Proof generated successfully!</p>
+          <p className="text-gray-400 font-semibold">
+            Most recently generated proof
+          </p>
           <p>
             <span className="font-medium">Verification Key:</span>{' '}
             <span className="break-all text-xs">
@@ -159,9 +174,6 @@ const GenerateProof = ({
       {error && (
         <div className="mt-2 text-sm text-red-500">
           <p>{error}</p>
-          <p className="text-xs mt-1">
-            Check your network connection or server status.
-          </p>
         </div>
       )}
     </div>

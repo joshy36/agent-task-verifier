@@ -1,25 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  createPublicClient,
-  http,
-  createWalletClient,
-  custom,
-  ContractFunctionRevertedError,
-} from 'viem';
+import { createPublicClient, http } from 'viem';
 import { sepolia } from 'viem/chains';
 import { Button } from '@/components/ui/button';
-import { MetaMaskInpageProvider } from '@metamask/providers';
-
-declare global {
-  interface Window {
-    ethereum?: MetaMaskInpageProvider;
-  }
-}
 
 const CONTRACT_ADDRESS = '0xfa9Cc30e4d458D6A327c8407414CcAfc61D0884c';
-const WALLET_ADDRESS = '0xe789a4B06Bc4b78F0Db311B74F537cEcBf64c302';
 const ABI = [
   {
     name: 'verifyProof',
@@ -48,6 +34,8 @@ const EXISTING_PROOF = {
     '0x11b6a09d162d45b6ef7b75be209659e0175446323760dc1fd19f3d471e787b813f99d6941946bf0ae30b03bd01ae6e6e31c65f12c2b6d55bad7878af40d1454f043963920fec4b8b6dc0fa46bc4a8d394c1302ff850e60ba86aa2749ea554070135739fe2393e7095b28868852bf0c0aab9d7a73717179df96fcced1d55ce9b715f7a5dd01d83f560d6e732d8f8034097ef454369350c37a2db617e517052a407918d64e068d38e4b156afe0cbc68837eae9cce2f88b82d50c97d5ba407474089c0ba7fd03ff0f02d9dcdba0a4a240ff32574c8833ad2b2c83e0743f57ae728dfde1ef380ae9779f45c00ac7f9f36805fa62be3185841240953edb1d479731a19e7639e7',
 };
 
+const WALLET_ADDRESS = '0xe789a4B06Bc4b78F0Db311B74F537cEcBf64c302';
+
 interface VerifyProofProps {
   vkey: string;
   publicValues: string;
@@ -75,17 +63,10 @@ const VerifyProof = ({ vkey, publicValues, proof }: VerifyProofProps) => {
 
     const publicClient = createPublicClient({
       chain: sepolia,
-      transport: http(),
-    });
-
-    const walletClient = createWalletClient({
-      chain: sepolia,
-      transport: custom(window.ethereum!),
+      transport: http(process.env.NEXT_PUBLIC_RPC_URL!),
     });
 
     try {
-      const [account] = await walletClient.requestAddresses();
-
       const rawData = await publicClient.readContract({
         address: CONTRACT_ADDRESS,
         abi: ABI,
@@ -95,7 +76,6 @@ const VerifyProof = ({ vkey, publicValues, proof }: VerifyProofProps) => {
           proofData.publicValues as `0x${string}`,
           proofData.proof as `0x${string}`,
         ],
-        account,
       });
 
       const resultTuple = rawData as [bigint, bigint, bigint, bigint, bigint];
@@ -107,7 +87,7 @@ const VerifyProof = ({ vkey, publicValues, proof }: VerifyProofProps) => {
         Number(resultTuple[4]),
       ]);
     } catch (err) {
-      if (err instanceof ContractFunctionRevertedError) {
+      if ((err as { details?: string }).details?.includes('revert')) {
         setError('Proof verification failed: The contract rejected the proof.');
       } else if ((err as Error).message.includes('out of bounds')) {
         setError('Invalid response format from contract. Check the ABI.');
@@ -129,7 +109,32 @@ const VerifyProof = ({ vkey, publicValues, proof }: VerifyProofProps) => {
   return (
     <div className="bg-gray-900 p-4 rounded-lg w-full border border-gray-800">
       <h2 className="text-xl font-semibold mb-4 text-gray-300">Verify Proof</h2>
-
+      {(vkey || publicValues || proof) && (
+        <div className="mt-4 text-sm text-gray-400">
+          <p className="text-gray-400 font-semibold">
+            Most recently generated proof
+          </p>
+          <p>
+            <span className="font-medium">Verification Key:</span>{' '}
+            <span className="break-all text-xs">
+              {vkey.slice(0, 10)}...{vkey.slice(-8)}
+            </span>
+          </p>
+          <p>
+            <span className="font-medium">Public Values:</span>{' '}
+            <span className="break-all text-xs">
+              {publicValues.slice(0, 10)}...
+              {publicValues.slice(-8)}
+            </span>
+          </p>
+          <p>
+            <span className="font-medium">Proof Bytes:</span>{' '}
+            <span className="break-all text-xs">
+              {proof.slice(0, 10)}...{proof.slice(-8)}
+            </span>
+          </p>
+        </div>
+      )}
       <Button
         onClick={() => verifyProof({ vkey, publicValues, proof })}
         className="w-full bg-gray-700 hover:bg-gray-600 text-white mb-4"
@@ -137,7 +142,6 @@ const VerifyProof = ({ vkey, publicValues, proof }: VerifyProofProps) => {
       >
         {isLoading ? 'Verifying...' : 'Verify Generated Proof'}
       </Button>
-
       <div className="mb-4">
         <h3 className="text-lg font-medium text-gray-300 mb-2">
           Existing Proof
@@ -199,13 +203,13 @@ const VerifyProof = ({ vkey, publicValues, proof }: VerifyProofProps) => {
           {isLoadingExisting ? 'Verifying...' : 'Verify Existing Proof'}
         </Button>
       </div>
-
       {result && (
         <div className="mt-2 text-sm text-gray-400">
           <p className="text-green-400">Verification successful!</p>
           <p>wBTC: {result[1].toString()}</p>
           <p>ETH: {result[2].toString()}</p>
           <p>DOGE: {result[3].toString()}</p>
+          <p>Status: {result[4].toString() === '1' ? 'Valid' : 'Invalid'}</p>
         </div>
       )}
       {error && (

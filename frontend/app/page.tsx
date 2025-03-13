@@ -33,7 +33,7 @@ export default function Home() {
           console.log('Polled proof data:', data);
           setProofData({
             vkey: data.vkey,
-            publicValues: data.public_values.join(','), // Join array to string
+            publicValues: data.public_values,
             proof: data.proof,
           });
         }

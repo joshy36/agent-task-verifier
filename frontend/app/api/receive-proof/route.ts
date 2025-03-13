@@ -7,7 +7,7 @@ interface ProofData {
   doge_bal: string; // 32-byte hex value
   is_valid: boolean; // Validity flag
   vkey: string; // 32-byte hex value
-  public_values: string[]; // Array of hex values
+  public_values: string;
   proof: string; // Hex value (possibly empty)
 }
 

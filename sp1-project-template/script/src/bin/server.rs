@@ -57,7 +57,7 @@ struct ProofResponse {
     doge_bal: String,
     is_valid: bool,
     vkey: String,
-    public_values: Vec<String>, // Array of committed values
+    public_values: String, // Array of committed values
     proof: String,
 }
 
@@ -222,20 +222,14 @@ async fn generate_proof_handler(
         doge_bal: format!("0x{}", hex::encode(doge_bal.to_be_bytes::<32>())),
         is_valid: fixture.is_valid,
         vkey: fixture.vkey.clone(),
-        public_values: vec![
-            fixture.agent.clone(),
-            fixture.wbtc_bal.clone(),
-            fixture.eth_bal.clone(),
-            fixture.doge_bal.clone(),
-            format!("0x{:x}", if fixture.is_valid { 1 } else { 0 }),
-        ],
+        public_values: fixture.public_values.clone(),
         proof: fixture.proof.clone(),
     };
 
     info!("Proof response prepared: {:?}", response);
 
     let client = reqwest::Client::new();
-    let nextjs_url = "http://localhost:3000/api/receive-proof";
+    let nextjs_url = "https://agent-task-verifier.vercel.app/api/receive-proof";
     match client.post(nextjs_url).json(&response).send().await {
         Ok(res) => {
             if res.status().is_success() {
