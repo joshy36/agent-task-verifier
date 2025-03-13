@@ -38,7 +38,7 @@ const GenerateProof = ({
 
     try {
       const response = await fetch(
-        'http://77.104.167.149:55562/generate_proof',
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/generate_proof`,
         {
           method: 'POST',
           headers: {
