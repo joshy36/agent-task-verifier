@@ -173,7 +173,7 @@ const TokenAllocation = ({ onWalletAddressChange }: TokenAllocationProps) => {
     <div className="bg-gray-900 p-4 rounded-lg w-full max-w-2xl border border-gray-800">
       <h2 className="text-xl font-semibold mb-2 text-gray-300">Send Tokens</h2>
       <p className="text-xs text-gray-500 mb-4">
-        Note: These are ERC20 tokens deployed on Sepolia testnet
+        These are ERC20 tokens deployed on Sepolia testnet
       </p>
 
       <div className="mb-6 space-y-3">

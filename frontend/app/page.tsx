@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TokenAllocation from './TokenAllocation';
 import GenerateProof from './GenerateProof';
 import VerifyProof from './VerifyProof';
@@ -23,6 +23,34 @@ export default function Home() {
     setProofData(data);
   };
 
+  useEffect(() => {
+    const fetchProof = async () => {
+      try {
+        const res = await fetch('/api/receive-proof');
+        const { data } = await res.json();
+        if (data && data.vkey !== proofData.vkey) {
+          // Only update if new data
+          console.log('Polled proof data:', data);
+          setProofData({
+            vkey: data.vkey,
+            publicValues: data.public_values.join(','), // Join array to string
+            proof: data.proof,
+          });
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    };
+
+    fetchProof(); // Initial fetch
+    const interval = setInterval(fetchProof, 2000); // Poll every 2 seconds
+
+    return () => {
+      clearInterval(interval);
+      console.log('Polling stopped');
+    };
+  }, [proofData.vkey]); // Dependency to avoid unnecessary updates
+
   return (
     <div className="flex items-center justify-center min-h-screen gap-4 p-4 bg-gray-900 text-white">
       <div className="flex flex-col md:flex-row gap-4 max-w-5xl w-full">
@@ -32,6 +60,7 @@ export default function Home() {
         <div className="flex-1">
           <GenerateProof
             walletAddress={walletAddress}
+            proofData={proofData}
             onProofGenerated={handleProofGenerated}
           />
         </div>

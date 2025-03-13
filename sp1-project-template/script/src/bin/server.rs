@@ -14,6 +14,7 @@ use sp1_sdk::{
 };
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info, trace};
 
 // ELF file from the program (update path after compiling the new zkVM program)
@@ -232,6 +233,23 @@ async fn generate_proof_handler(
     };
 
     info!("Proof response prepared: {:?}", response);
+
+    let client = reqwest::Client::new();
+    let nextjs_url = "http://localhost:3000/api/receive-proof";
+    match client.post(nextjs_url).json(&response).send().await {
+        Ok(res) => {
+            if res.status().is_success() {
+                info!(
+                    "Successfully posted proof to Next.js API: {:?}",
+                    res.text().await
+                );
+            } else {
+                error!("Failed to post proof to Next.js API: {:?}", res.status());
+            }
+        }
+        Err(e) => error!("Error sending proof to Next.js API: {:?}", e),
+    }
+
     trace!("Completed proof generation handler");
     Ok(Json(response))
 }
@@ -276,7 +294,15 @@ async fn main() {
     sp1_sdk::utils::setup_logger();
     info!("Starting server initialization");
 
-    let app = Router::new().route("/generate_proof", post(generate_proof_handler));
+    let cors = CorsLayer::new()
+        .allow_methods([http::Method::GET, http::Method::POST]) // Specify allowed methods
+        .allow_origin(Any) // Allow all origins (for development only)
+        .allow_headers(Any); // Allow all headers
+
+    let app = Router::new()
+        .route("/generate_proof", post(generate_proof_handler))
+        .layer(cors);
+
     info!("Router configured with /generate_proof endpoint");
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3001));
@@ -352,5 +378,5 @@ fn create_proof_fixture(
     )
     .expect("failed to write fixture");
 
-    fixture // Return the fixture
+    fixture
 }
