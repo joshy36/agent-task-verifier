@@ -13,7 +13,6 @@ type ProofData = {
 interface GenerateProofProps {
   walletAddress?: string;
   proofData: ProofData;
-  onProofGenerated: (data: ProofData) => void;
 }
 
 const KNOWN_VALID_ADDRESS = '0xe789a4B06Bc4b78F0Db311B74F537cEcBf64c302';
@@ -21,13 +20,12 @@ const KNOWN_VALID_ADDRESS = '0xe789a4B06Bc4b78F0Db311B74F537cEcBf64c302';
 const GenerateProof = ({
   walletAddress: initialWalletAddress = '',
   proofData,
-  onProofGenerated,
 }: GenerateProofProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [address, setAddress] = useState(initialWalletAddress);
 
-  const generateProof = async () => {
+  const startProofGeneration = async () => {
     if (!address) {
       setError('Please provide a wallet address');
       return;
@@ -37,36 +35,22 @@ const GenerateProof = ({
     setError(null);
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/generate_proof`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            agent: address,
-            system: 'groth16',
-          }),
-        }
-      );
+      const response = await fetch('/api/generate-proof', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent: address, system: 'groth16' }),
+      });
 
       if (!response.ok) {
         throw new Error(
-          `Server responded with ${response.status}: ${response.statusText}`
+          `Failed to start proof generation: ${response.statusText}`
         );
       }
 
-      const data = await response.json();
-      const newProofData: ProofData = {
-        vkey: data.vkey,
-        publicValues: data.public_values,
-        proof: data.proof,
-      };
-      onProofGenerated(newProofData);
-    } catch {
+      // No need to await the result here; polling in Home will handle it
+    } catch (err) {
       setError(
-        'If the wallet has a zero balance of any of the tokens this will error. I need to fix that cause you would still want to generate a proof that shows invalid'
+        err instanceof Error ? err.message : 'Failed to start proof generation'
       );
     } finally {
       setIsLoading(false);
@@ -104,7 +88,7 @@ const GenerateProof = ({
       </div>
 
       <Button
-        onClick={generateProof}
+        onClick={startProofGeneration}
         className="w-full bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center"
         disabled={isLoading || !address}
       >
@@ -130,39 +114,37 @@ const GenerateProof = ({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
               />
             </svg>
-            <span>Generating...</span>
+            <span>Starting...</span>
           </>
         ) : (
           'Generate Proof'
         )}
       </Button>
 
-      {/* Show wait message when generating */}
-      {isLoading && (
-        <div className="mt-2 text-sm text-gray-400 text-center">
-          This takes about 3 minutes
-        </div>
-      )}
+      <div className="mt-2 text-xs text-gray-400">
+        Proof generation takes around 3 minutes. Don&apos;t spam the button. The
+        ui will update when the new proof is done.
+      </div>
 
       {(proofData.vkey || proofData.publicValues || proofData.proof) && (
         <div className="mt-4 text-sm text-gray-400">
           <p className="text-gray-400 font-semibold">
             Most recently generated proof
           </p>
-          <p>
+          <p className=" flex justify-between">
             <span className="font-medium">Verification Key:</span>{' '}
             <span className="break-all text-xs">
               {proofData.vkey.slice(0, 10)}...{proofData.vkey.slice(-8)}
             </span>
           </p>
-          <p>
+          <p className=" flex justify-between">
             <span className="font-medium">Public Values:</span>{' '}
             <span className="break-all text-xs">
               {proofData.publicValues.slice(0, 10)}...
               {proofData.publicValues.slice(-8)}
             </span>
           </p>
-          <p>
+          <p className=" flex justify-between">
             <span className="font-medium">Proof Bytes:</span>{' '}
             <span className="break-all text-xs">
               {proofData.proof.slice(0, 10)}...{proofData.proof.slice(-8)}

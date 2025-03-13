@@ -110,24 +110,24 @@ const VerifyProof = ({ vkey, publicValues, proof }: VerifyProofProps) => {
     <div className="bg-gray-900 p-4 rounded-lg w-full border border-gray-800">
       <h2 className="text-xl font-semibold mb-4 text-gray-300">Verify Proof</h2>
       {(vkey || publicValues || proof) && (
-        <div className="mt-4 text-sm text-gray-400">
+        <div className="my-4 text-sm text-gray-400">
           <p className="text-gray-400 font-semibold">
             Most recently generated proof
           </p>
-          <p>
+          <p className=" flex justify-between">
             <span className="font-medium">Verification Key:</span>{' '}
             <span className="break-all text-xs">
               {vkey.slice(0, 10)}...{vkey.slice(-8)}
             </span>
           </p>
-          <p>
+          <p className=" flex justify-between">
             <span className="font-medium">Public Values:</span>{' '}
             <span className="break-all text-xs">
               {publicValues.slice(0, 10)}...
               {publicValues.slice(-8)}
             </span>
           </p>
-          <p>
+          <p className=" flex justify-between">
             <span className="font-medium">Proof Bytes:</span>{' '}
             <span className="break-all text-xs">
               {proof.slice(0, 10)}...{proof.slice(-8)}

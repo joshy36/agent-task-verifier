@@ -19,10 +19,6 @@ export default function Home() {
     proof: '',
   });
 
-  const handleProofGenerated = (data: ProofData) => {
-    setProofData(data);
-  };
-
   useEffect(() => {
     const fetchProof = async () => {
       try {
@@ -58,11 +54,7 @@ export default function Home() {
           <TokenAllocation onWalletAddressChange={setWalletAddress} />
         </div>
         <div className="flex-1">
-          <GenerateProof
-            walletAddress={walletAddress}
-            proofData={proofData}
-            onProofGenerated={handleProofGenerated}
-          />
+          <GenerateProof walletAddress={walletAddress} proofData={proofData} />
         </div>
         <div className="flex-1">
           <VerifyProof
