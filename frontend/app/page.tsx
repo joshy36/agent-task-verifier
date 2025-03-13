@@ -1,9 +1,11 @@
+// Home.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import TokenAllocation from './TokenAllocation';
 import GenerateProof from './GenerateProof';
 import VerifyProof from './VerifyProof';
+import { startPolling } from './polling'; // Import the polling logic
 
 type ProofData = {
   vkey: string;
@@ -18,36 +20,18 @@ export default function Home() {
     publicValues: '',
     proof: '',
   });
-  const [isGenerating, setIsGenerating] = useState(false); // New state to track generation
+  const [isGenerating, setIsGenerating] = useState(false);
 
+  // Wrap setProofData to include logging
+  const handleSetProofData = (data: ProofData) => {
+    setProofData(data);
+  };
+
+  // Start polling once when the component mounts
   useEffect(() => {
-    const fetchProof = async () => {
-      try {
-        const res = await fetch('/api/receive-proof');
-        const { data } = await res.json();
-        if (data && data.vkey !== proofData.vkey) {
-          // Only update if new data
-          console.log('Polled proof data:', data);
-          setProofData({
-            vkey: data.vkey,
-            publicValues: data.public_values,
-            proof: data.proof,
-          });
-          setIsGenerating(false); // Re-enable the button when proof is received
-        }
-      } catch (error) {
-        console.error('Polling error:', error);
-      }
-    };
-
-    fetchProof(); // Initial fetch
-    const interval = setInterval(fetchProof, 2000); // Poll every 2 seconds
-
-    return () => {
-      clearInterval(interval);
-      console.log('Polling stopped');
-    };
-  }, [proofData.vkey]); // Dependency to avoid unnecessary updates
+    startPolling(handleSetProofData, setIsGenerating);
+    // No cleanup: polling continues indefinitely
+  }, []); // Empty dependency array: runs once on mount
 
   return (
     <div className="flex items-center justify-center min-h-screen gap-4 p-4 bg-gray-900 text-white">
